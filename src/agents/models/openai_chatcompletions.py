@@ -521,6 +521,8 @@ class OpenAIChatCompletionsModel(Model):
         # Match the behavior of Responses where store is True when not given
         store = model_settings.store if model_settings.store is not None else True
 
+        reasoning_effort = model_settings.reasoning.effort if model_settings.reasoning else None
+
         ret = await self._get_client().chat.completions.create(
             model=self.model,
             messages=converted_messages,
@@ -536,7 +538,9 @@ class OpenAIChatCompletionsModel(Model):
             stream=stream,
             stream_options={"include_usage": True} if stream else NOT_GIVEN,
             store=store,
+            reasoning_effort=self._non_null_or_not_given(reasoning_effort),
             extra_headers=_HEADERS,
+            metadata=model_settings.metadata,
         )
 
         if isinstance(ret, ChatCompletion):
@@ -555,6 +559,7 @@ class OpenAIChatCompletionsModel(Model):
             temperature=model_settings.temperature,
             tools=[],
             parallel_tool_calls=parallel_tool_calls or False,
+            reasoning=model_settings.reasoning,
         )
         return response, ret
 
@@ -923,12 +928,13 @@ class _Converter:
             elif func_call := cls.maybe_function_tool_call(item):
                 asst = ensure_assistant_message()
                 tool_calls = list(asst.get("tool_calls", []))
+                arguments = func_call["arguments"] if func_call["arguments"] else "{}"
                 new_tool_call = ChatCompletionMessageToolCallParam(
                     id=func_call["call_id"],
                     type="function",
                     function={
                         "name": func_call["name"],
-                        "arguments": func_call["arguments"],
+                        "arguments": arguments,
                     },
                 )
                 tool_calls.append(new_tool_call)
@@ -971,7 +977,7 @@ class ToolConverter:
             }
 
         raise UserError(
-            f"Hosted tools are not supported with the ChatCompletions API. FGot tool type: "
+            f"Hosted tools are not supported with the ChatCompletions API. Got tool type: "
             f"{type(tool)}, tool: {tool}"
         )
 
