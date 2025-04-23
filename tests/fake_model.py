@@ -5,7 +5,7 @@ from typing import Any
 
 from openai.types.responses import Response, ResponseCompletedEvent
 
-from agents.agent_output import AgentOutputSchema
+from agents.agent_output import AgentOutputSchemaBase
 from agents.handoffs import Handoff
 from agents.items import (
     ModelResponse,
@@ -51,9 +51,11 @@ class FakeModel(Model):
         input: str | list[TResponseInputItem],
         model_settings: ModelSettings,
         tools: list[Tool],
-        output_schema: AgentOutputSchema | None,
+        output_schema: AgentOutputSchemaBase | None,
         handoffs: list[Handoff],
         tracing: ModelTracing,
+        *,
+        previous_response_id: str | None,
     ) -> ModelResponse:
         self.last_turn_args = {
             "system_instructions": system_instructions,
@@ -61,6 +63,7 @@ class FakeModel(Model):
             "model_settings": model_settings,
             "tools": tools,
             "output_schema": output_schema,
+            "previous_response_id": previous_response_id,
         }
 
         with generation_span(disabled=not self.tracing_enabled) as span:
@@ -81,7 +84,7 @@ class FakeModel(Model):
             return ModelResponse(
                 output=output,
                 usage=Usage(),
-                referenceable_id=None,
+                response_id=None,
             )
 
     async def stream_response(
@@ -90,10 +93,20 @@ class FakeModel(Model):
         input: str | list[TResponseInputItem],
         model_settings: ModelSettings,
         tools: list[Tool],
-        output_schema: AgentOutputSchema | None,
+        output_schema: AgentOutputSchemaBase | None,
         handoffs: list[Handoff],
         tracing: ModelTracing,
+        *,
+        previous_response_id: str | None,
     ) -> AsyncIterator[TResponseStreamEvent]:
+        self.last_turn_args = {
+            "system_instructions": system_instructions,
+            "input": input,
+            "model_settings": model_settings,
+            "tools": tools,
+            "output_schema": output_schema,
+            "previous_response_id": previous_response_id,
+        }
         with generation_span(disabled=not self.tracing_enabled) as span:
             output = self.get_next_output()
             if isinstance(output, Exception):

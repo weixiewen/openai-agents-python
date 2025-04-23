@@ -10,7 +10,7 @@ from typing_extensions import TypeVar
 
 from ._run_impl import QueueCompleteSentinel
 from .agent import Agent
-from .agent_output import AgentOutputSchema
+from .agent_output import AgentOutputSchemaBase
 from .exceptions import InputGuardrailTripwireTriggered, MaxTurnsExceeded
 from .guardrail import InputGuardrailResult, OutputGuardrailResult
 from .items import ItemHelpers, ModelResponse, RunItem, TResponseInputItem
@@ -80,6 +80,14 @@ class RunResultBase(abc.ABC):
 
         return original_items + new_items
 
+    @property
+    def last_response_id(self) -> str | None:
+        """Convenience method to get the response ID of the last model response."""
+        if not self.raw_responses:
+            return None
+
+        return self.raw_responses[-1].response_id
+
 
 @dataclass
 class RunResult(RunResultBase):
@@ -116,9 +124,9 @@ class RunResultStreaming(RunResultBase):
     final_output: Any
     """The final output of the agent. This is None until the agent has finished running."""
 
-    _current_agent_output_schema: AgentOutputSchema | None = field(repr=False)
+    _current_agent_output_schema: AgentOutputSchemaBase | None = field(repr=False)
 
-    _trace: Trace | None = field(repr=False)
+    trace: Trace | None = field(repr=False)
 
     is_complete: bool = False
     """Whether the agent has finished running."""
@@ -176,9 +184,6 @@ class RunResultStreaming(RunResultBase):
 
             yield item
             self._event_queue.task_done()
-
-        if self._trace:
-            self._trace.finish(reset_current=True)
 
         self._cleanup_tasks()
 
