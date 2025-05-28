@@ -13,6 +13,10 @@ OpenAI offers a few built-in tools when using the [`OpenAIResponsesModel`][agent
 -   The [`WebSearchTool`][agents.tool.WebSearchTool] lets an agent search the web.
 -   The [`FileSearchTool`][agents.tool.FileSearchTool] allows retrieving information from your OpenAI Vector Stores.
 -   The [`ComputerTool`][agents.tool.ComputerTool] allows automating computer use tasks.
+-   The [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] lets the LLM execute code in a sandboxed environment.
+-   The [`HostedMCPTool`][agents.tool.HostedMCPTool] exposes a remote MCP server's tools to the model.
+-   The [`ImageGenerationTool`][agents.tool.ImageGenerationTool] generates images from a prompt.
+-   The [`LocalShellTool`][agents.tool.LocalShellTool] runs shell commands on your machine.
 
 ```python
 from agents import Agent, FileSearchTool, Runner, WebSearchTool
@@ -257,6 +261,27 @@ orchestrator_agent = Agent(
 async def main():
     result = await Runner.run(orchestrator_agent, input="Say 'Hello, how are you?' in Spanish.")
     print(result.final_output)
+```
+
+### Customizing tool-agents
+
+The `agent.as_tool` function is a convenience method to make it easy to turn an agent into a tool. It doesn't support all configuration though; for example, you can't set `max_turns`. For advanced use cases, use `Runner.run` directly in your tool implementation:
+
+```python
+@function_tool
+async def run_my_agent() -> str:
+  """A tool that runs the agent with custom configs".
+
+    agent = Agent(name="My agent", instructions="...")
+
+    result = await Runner.run(
+        agent,
+        input="...",
+        max_turns=5,
+        run_config=...
+    )
+
+    return str(result.final_output)
 ```
 
 ## Handling errors in function tools

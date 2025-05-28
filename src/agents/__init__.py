@@ -6,7 +6,7 @@ from openai import AsyncOpenAI
 
 from . import _config
 from .agent import Agent, ToolsToFinalOutputFunction, ToolsToFinalOutputResult
-from .agent_output import AgentOutputSchema
+from .agent_output import AgentOutputSchema, AgentOutputSchemaBase
 from .computer import AsyncComputer, Button, Computer, Environment
 from .exceptions import (
     AgentsException,
@@ -54,10 +54,19 @@ from .stream_events import (
     StreamEvent,
 )
 from .tool import (
+    CodeInterpreterTool,
     ComputerTool,
     FileSearchTool,
     FunctionTool,
     FunctionToolResult,
+    HostedMCPTool,
+    ImageGenerationTool,
+    LocalShellCommandRequest,
+    LocalShellExecutor,
+    LocalShellTool,
+    MCPToolApprovalFunction,
+    MCPToolApprovalFunctionResult,
+    MCPToolApprovalRequest,
     Tool,
     WebSearchTool,
     default_tool_error_function,
@@ -158,6 +167,7 @@ __all__ = [
     "OpenAIProvider",
     "OpenAIResponsesModel",
     "AgentOutputSchema",
+    "AgentOutputSchemaBase",
     "Computer",
     "AsyncComputer",
     "Environment",
@@ -205,8 +215,17 @@ __all__ = [
     "FunctionToolResult",
     "ComputerTool",
     "FileSearchTool",
+    "CodeInterpreterTool",
+    "ImageGenerationTool",
+    "LocalShellCommandRequest",
+    "LocalShellExecutor",
+    "LocalShellTool",
     "Tool",
     "WebSearchTool",
+    "HostedMCPTool",
+    "MCPToolApprovalFunction",
+    "MCPToolApprovalRequest",
+    "MCPToolApprovalFunctionResult",
     "function_tool",
     "Usage",
     "add_trace_processor",
